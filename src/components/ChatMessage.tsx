@@ -60,10 +60,10 @@ const ChatMessageComponent = ({ message, onRegenerateImage }: ChatMessageProps) 
       >
         {message.sender === "user" ? (
           <div className="flex items-start">
-            <p className="whitespace-pre-wrap break-words mr-2">{message.content}</p>
+            <p className="whitespace-pre-wrap break-words overflow-hidden mr-2">{message.content}</p>
             <button
               onClick={copyToClipboard}
-              className="opacity-50 hover:opacity-100 transition-opacity p-1"
+              className="opacity-50 hover:opacity-100 transition-opacity p-1 flex-shrink-0"
               aria-label="Copy message"
             >
               <Copy className="h-4 w-4" />
@@ -72,7 +72,7 @@ const ChatMessageComponent = ({ message, onRegenerateImage }: ChatMessageProps) 
         ) : (
           <div className="flex flex-col space-y-3">
             {message.content && (
-              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+              <p className="whitespace-pre-wrap break-words overflow-hidden">{message.content}</p>
             )}
             {message.imageUrl && (
               <div className="flex flex-col items-center space-y-2">

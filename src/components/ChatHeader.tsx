@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Settings } from "@/components/Settings";
+import Settings from "@/components/Settings";
 import { MessageSquare, Settings as SettingsIcon } from "lucide-react";
 
 interface ChatHeaderProps {
