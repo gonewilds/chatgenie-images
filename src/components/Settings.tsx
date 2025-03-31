@@ -163,7 +163,7 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
                   type="number"
                   value={settings.width}
                   onChange={(e) => 
-                    setSettings({ ...settings, width: parseInt(e.target.value) || 512 })
+                    setSettings({ ...settings, width: parseInt(e.target.value) || 832 })
                   }
                   min={1}
                   max={2048}
@@ -177,7 +177,7 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
                   type="number"
                   value={settings.height}
                   onChange={(e) =>
-                    setSettings({ ...settings, height: parseInt(e.target.value) || 512 })
+                    setSettings({ ...settings, height: parseInt(e.target.value) || 1216 })
                   }
                   min={1}
                   max={2048}
