@@ -165,9 +165,9 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
                   onChange={(e) => 
                     setSettings({ ...settings, width: parseInt(e.target.value) || 512 })
                   }
-                  min={64}
+                  min={1}
                   max={2048}
-                  step={8}
+                  step={1}
                 />
               </div>
               <div className="grid gap-2">
@@ -179,9 +179,9 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
                   onChange={(e) =>
                     setSettings({ ...settings, height: parseInt(e.target.value) || 512 })
                   }
-                  min={64}
+                  min={1}
                   max={2048}
-                  step={8}
+                  step={1}
                 />
               </div>
             </div>
