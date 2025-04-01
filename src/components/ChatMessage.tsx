@@ -10,9 +10,10 @@ import ImagePreview from "./ImagePreview";
 interface ChatMessageProps {
   message: ChatMessage;
   onRegenerateImage: (prompt: string) => void;
+  allImages: { url: string, messageId: string }[];
 }
 
-const ChatMessageComponent = ({ message, onRegenerateImage }: ChatMessageProps) => {
+const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMessageProps) => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const copyToClipboard = async () => {
@@ -44,6 +45,11 @@ const ChatMessageComponent = ({ message, onRegenerateImage }: ChatMessageProps) 
       setIsImageModalOpen(true);
     }
   };
+  
+  // Find the current image index in the allImages array
+  const currentImageIndex = message.imageUrl 
+    ? allImages.findIndex(img => img.messageId === message.id)
+    : -1;
 
   return (
     <div
@@ -102,7 +108,8 @@ const ChatMessageComponent = ({ message, onRegenerateImage }: ChatMessageProps) 
 
       {isImageModalOpen && message.imageUrl && (
         <ImagePreview
-          imageUrl={message.imageUrl}
+          images={allImages}
+          initialIndex={currentImageIndex !== -1 ? currentImageIndex : 0}
           onClose={() => setIsImageModalOpen(false)}
         />
       )}

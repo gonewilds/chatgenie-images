@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -17,6 +18,8 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
+  defaultIndex?: number
+  onPageChange?: (index: number) => void
 }
 
 type CarouselContextProps = {
@@ -26,6 +29,7 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  selectedIndex: number
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -52,6 +56,8 @@ const Carousel = React.forwardRef<
       plugins,
       className,
       children,
+      defaultIndex = 0,
+      onPageChange,
       ...props
     },
     ref
@@ -60,9 +66,11 @@ const Carousel = React.forwardRef<
       {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
+        startIndex: defaultIndex,
       },
       plugins
     )
+    const [selectedIndex, setSelectedIndex] = React.useState(defaultIndex)
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
@@ -71,9 +79,15 @@ const Carousel = React.forwardRef<
         return
       }
 
+      const currentIndex = api.selectedScrollSnap()
+      setSelectedIndex(currentIndex)
+      if (onPageChange) {
+        onPageChange(currentIndex)
+      }
+      
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
-    }, [])
+    }, [onPageChange])
 
     const scrollPrev = React.useCallback(() => {
       api?.scrollPrev()
@@ -118,6 +132,13 @@ const Carousel = React.forwardRef<
       }
     }, [api, onSelect])
 
+    // Set initial slide based on defaultIndex
+    React.useEffect(() => {
+      if (api && defaultIndex !== undefined && defaultIndex !== 0) {
+        api.scrollTo(defaultIndex)
+      }
+    }, [api, defaultIndex])
+
     return (
       <CarouselContext.Provider
         value={{
@@ -130,6 +151,7 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          selectedIndex,
         }}
       >
         <div

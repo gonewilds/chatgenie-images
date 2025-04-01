@@ -16,6 +16,14 @@ const ChatMessageList = ({ messages, onRegenerateImage }: ChatMessageListProps) 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Collect all images from bot messages
+  const allImages = messages
+    .filter(msg => msg.sender === "bot" && msg.imageUrl)
+    .map(msg => ({
+      url: msg.imageUrl as string,
+      messageId: msg.id
+    }));
+
   return (
     <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
       {messages.length === 0 ? (
@@ -31,6 +39,7 @@ const ChatMessageList = ({ messages, onRegenerateImage }: ChatMessageListProps) 
             key={message.id}
             message={message}
             onRegenerateImage={onRegenerateImage}
+            allImages={allImages}
           />
         ))
       )}
