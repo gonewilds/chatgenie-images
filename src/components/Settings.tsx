@@ -14,6 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,6 +32,7 @@ import { getApiEndpoint, setApiEndpoint, getGenerationSettings, setGenerationSet
 import { GenerationSettings as GenerationSettingsType } from "@/types";
 import { toast } from "@/hooks/use-toast";
 import { AlertCircle, Trash2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SettingsProps {
   isOpen: boolean;
@@ -55,6 +64,164 @@ const samplers = [
 
 const schedulers = ["Automatic", "Karras", "Exponential", "Polyexponential", "DDIM Uniform"];
 
+const SettingsContent = ({ 
+  apiEndpoint, 
+  setApiEndpointState, 
+  settings, 
+  setSettings, 
+  onSave, 
+  onClose, 
+  onClearChat 
+}: { 
+  apiEndpoint: string;
+  setApiEndpointState: (value: string) => void;
+  settings: GenerationSettingsType;
+  setSettings: (settings: GenerationSettingsType) => void;
+  onSave: () => void;
+  onClose: () => void;
+  onClearChat: () => void;
+}) => (
+  <div className="space-y-4">
+    <div className="grid gap-4 py-2">
+      <div className="grid gap-2">
+        <Label htmlFor="apiEndpoint" className="flex items-center gap-1">
+          API Endpoint <AlertCircle className="h-3 w-3 text-muted-foreground" />
+        </Label>
+        <Input
+          id="apiEndpoint"
+          value={apiEndpoint}
+          onChange={(e) => setApiEndpointState(e.target.value)}
+          placeholder="https://your-api-endpoint.com/image"
+        />
+        <p className="text-xs text-muted-foreground">
+          Enter the URL of your Automatic1111 API endpoint
+        </p>
+      </div>
+
+      <div className="space-y-4 mt-1">
+        <h3 className="font-medium text-base">Image Generation Settings</h3>
+
+        <div className="grid gap-2">
+          <Label>Steps: {settings.steps}</Label>
+          <Slider
+            value={[settings.steps]}
+            min={1}
+            max={50}
+            step={1}
+            onValueChange={(value) => setSettings({ ...settings, steps: value[0] })}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>CFG Scale: {settings.cfg_scale}</Label>
+          <Slider
+            value={[settings.cfg_scale]}
+            min={1}
+            max={20}
+            step={0.5}
+            onValueChange={(value) => setSettings({ ...settings, cfg_scale: value[0] })}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="width">Width</Label>
+            <Input
+              id="width"
+              type="number"
+              value={settings.width}
+              onChange={(e) => 
+                setSettings({ ...settings, width: parseInt(e.target.value) || 512 })
+              }
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="height">Height</Label>
+            <Input
+              id="height"
+              type="number"
+              value={settings.height}
+              onChange={(e) =>
+                setSettings({ ...settings, height: parseInt(e.target.value) || 512 })
+              }
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="sampler">Sampler</Label>
+          <Select
+            value={settings.sampler_name}
+            onValueChange={(value) => setSettings({ ...settings, sampler_name: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select sampler" />
+            </SelectTrigger>
+            <SelectContent>
+              {samplers.map((sampler) => (
+                <SelectItem key={sampler} value={sampler}>
+                  {sampler}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="scheduler">Scheduler</Label>
+          <Select
+            value={settings.scheduler}
+            onValueChange={(value) => setSettings({ ...settings, scheduler: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select scheduler" />
+            </SelectTrigger>
+            <SelectContent>
+              {schedulers.map((scheduler) => (
+                <SelectItem key={scheduler} value={scheduler}>
+                  {scheduler}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="negativePrompt">Negative Prompt</Label>
+          <Textarea
+            id="negativePrompt"
+            value={settings.negative_prompt}
+            onChange={(e) =>
+              setSettings({ ...settings, negative_prompt: e.target.value })
+            }
+            placeholder="Elements to exclude from the generated image"
+            className="resize-none h-20"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div className="flex flex-col gap-4 pt-2">
+      <div className="flex justify-between items-center gap-2">
+        <Button
+          variant="destructive"
+          onClick={onClearChat}
+          className="flex items-center gap-2"
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear History
+        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={onSave}>Save</Button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
   const [apiEndpoint, setApiEndpointState] = useState("");
   const [settings, setSettings] = useState<GenerationSettingsType>({
@@ -66,6 +233,7 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
     scheduler: "Automatic",
     negative_prompt: "",
   });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (isOpen) {
@@ -104,6 +272,36 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
     onClose();
   };
 
+  // Use Sheet for mobile and Dialog for desktop
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent className="px-4 py-8 overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Settings</SheetTitle>
+            <SheetDescription>
+              Configure your API endpoint and image generation settings
+            </SheetDescription>
+          </SheetHeader>
+          
+          <SettingsContent
+            apiEndpoint={apiEndpoint}
+            setApiEndpointState={setApiEndpointState}
+            settings={settings}
+            setSettings={setSettings}
+            onSave={handleSave}
+            onClose={onClose}
+            onClearChat={handleClearChat}
+          />
+          
+          <SheetFooter className="mt-4">
+            {/* Footer content rendered in SettingsContent */}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto scrollbar-thin">
@@ -114,146 +312,18 @@ const Settings = ({ isOpen, onClose, onClearChat }: SettingsProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="apiEndpoint" className="flex items-center gap-1">
-              API Endpoint <AlertCircle className="h-3 w-3 text-muted-foreground" />
-            </Label>
-            <Input
-              id="apiEndpoint"
-              value={apiEndpoint}
-              onChange={(e) => setApiEndpointState(e.target.value)}
-              placeholder="https://your-api-endpoint.com/image"
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the URL of your Automatic1111 API endpoint
-            </p>
-          </div>
+        <SettingsContent
+          apiEndpoint={apiEndpoint}
+          setApiEndpointState={setApiEndpointState}
+          settings={settings}
+          setSettings={setSettings}
+          onSave={handleSave}
+          onClose={onClose}
+          onClearChat={handleClearChat}
+        />
 
-          <div className="space-y-4 mt-2">
-            <h3 className="font-medium">Image Generation Settings</h3>
-
-            <div className="grid gap-2">
-              <Label>Steps: {settings.steps}</Label>
-              <Slider
-                value={[settings.steps]}
-                min={1}
-                max={50}
-                step={1}
-                onValueChange={(value) => setSettings({ ...settings, steps: value[0] })}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label>CFG Scale: {settings.cfg_scale}</Label>
-              <Slider
-                value={[settings.cfg_scale]}
-                min={1}
-                max={20}
-                step={0.5}
-                onValueChange={(value) => setSettings({ ...settings, cfg_scale: value[0] })}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="width">Width</Label>
-                <Input
-                  id="width"
-                  type="number"
-                  value={settings.width}
-                  onChange={(e) => 
-                    setSettings({ ...settings, width: parseInt(e.target.value) || 832 })
-                  }
-                  min={1}
-                  max={2048}
-                  step={1}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="height">Height</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  value={settings.height}
-                  onChange={(e) =>
-                    setSettings({ ...settings, height: parseInt(e.target.value) || 1216 })
-                  }
-                  min={1}
-                  max={2048}
-                  step={1}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="sampler">Sampler</Label>
-              <Select
-                value={settings.sampler_name}
-                onValueChange={(value) => setSettings({ ...settings, sampler_name: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select sampler" />
-                </SelectTrigger>
-                <SelectContent>
-                  {samplers.map((sampler) => (
-                    <SelectItem key={sampler} value={sampler}>
-                      {sampler}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="scheduler">Scheduler</Label>
-              <Select
-                value={settings.scheduler}
-                onValueChange={(value) => setSettings({ ...settings, scheduler: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select scheduler" />
-                </SelectTrigger>
-                <SelectContent>
-                  {schedulers.map((scheduler) => (
-                    <SelectItem key={scheduler} value={scheduler}>
-                      {scheduler}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="negativePrompt">Negative Prompt</Label>
-              <Textarea
-                id="negativePrompt"
-                value={settings.negative_prompt}
-                onChange={(e) =>
-                  setSettings({ ...settings, negative_prompt: e.target.value })
-                }
-                placeholder="Elements to exclude from the generated image"
-                className="resize-none h-20"
-              />
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="flex flex-col-reverse sm:flex-row space-y-2 sm:space-y-0 pt-2">
-          <Button
-            variant="destructive"
-            onClick={handleClearChat}
-            className="flex items-center gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            Clear Chat History
-          </Button>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-          </div>
+        <DialogFooter className="mt-4">
+          {/* Footer content rendered in SettingsContent */}
         </DialogFooter>
       </DialogContent>
     </Dialog>
