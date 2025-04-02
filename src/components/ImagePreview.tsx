@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { X, ArrowLeft, ArrowRight, ZoomIn, ZoomOut } from "lucide-react";
+import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { 
   Carousel,
   CarouselContent,
@@ -8,7 +8,6 @@ import {
   CarouselPrevious,
   CarouselNext
 } from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
 
 interface ImagePreviewProps {
   images: { url: string, messageId: string }[];
@@ -18,7 +17,6 @@ interface ImagePreviewProps {
 
 const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [zoomLevel, setZoomLevel] = useState(1);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -29,29 +27,12 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
         setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
       } else if (e.key === "ArrowRight") {
         setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-      } else if (e.key === "+" || e.key === "=") {
-        setZoomLevel(prev => Math.min(prev + 0.25, 3));
-      } else if (e.key === "-") {
-        setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [images.length, onClose]);
-
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.25, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
-  };
-
-  // Reset zoom when changing images
-  useEffect(() => {
-    setZoomLevel(1);
-  }, [currentIndex]);
 
   // Prevent body scrolling when preview is open
   useEffect(() => {
@@ -74,41 +55,11 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
           >
             <X className="h-6 w-6" />
           </button>
-          
-          <div className="absolute top-4 left-4 z-10 flex space-x-2">
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="rounded-full bg-background/50 hover:bg-background/80 transition-colors"
-              onClick={handleZoomIn}
-            >
-              <ZoomIn className="h-4 w-4" />
-              <span className="sr-only">Zoom in</span>
-            </Button>
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="rounded-full bg-background/50 hover:bg-background/80 transition-colors"
-              onClick={handleZoomOut}
-            >
-              <ZoomOut className="h-4 w-4" />
-              <span className="sr-only">Zoom out</span>
-            </Button>
-          </div>
-          
-          <div 
-            className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto"
-            style={{ cursor: zoomLevel > 1 ? 'move' : 'auto' }}
-          >
+          <div className="w-full h-full flex items-center justify-center p-4 md:p-8">
             <img
               src={images[0].url}
               alt="Full size preview"
-              className="object-contain transition-transform duration-200"
-              style={{ 
-                transform: `scale(${zoomLevel})`,
-                maxWidth: zoomLevel === 1 ? '100%' : 'none',
-                maxHeight: zoomLevel === 1 ? '100%' : 'none'
-              }}
+              className="max-w-full max-h-full object-contain"
             />
           </div>
         </div>
@@ -127,31 +78,8 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
           <X className="h-6 w-6" />
         </button>
         
-        <div className="absolute top-4 left-4 z-10 flex items-center space-x-4">
-          <span className="px-3 py-1 rounded-full bg-background/50 text-sm text-muted-foreground">
-            {currentIndex + 1} / {images.length}
-          </span>
-          
-          <div className="flex space-x-2">
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="rounded-full bg-background/50 hover:bg-background/80 transition-colors"
-              onClick={handleZoomIn}
-            >
-              <ZoomIn className="h-4 w-4" />
-              <span className="sr-only">Zoom in</span>
-            </Button>
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="rounded-full bg-background/50 hover:bg-background/80 transition-colors"
-              onClick={handleZoomOut}
-            >
-              <ZoomOut className="h-4 w-4" />
-              <span className="sr-only">Zoom out</span>
-            </Button>
-          </div>
+        <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full bg-background/50 text-sm text-muted-foreground">
+          {currentIndex + 1} / {images.length}
         </div>
         
         <Carousel 
@@ -162,19 +90,11 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
           <CarouselContent className="h-full">
             {images.map((image, index) => (
               <CarouselItem key={image.messageId + index} className="h-full flex items-center justify-center">
-                <div 
-                  className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto"
-                  style={{ cursor: zoomLevel > 1 ? 'move' : 'auto' }}
-                >
+                <div className="w-full h-full flex items-center justify-center p-4 md:p-8">
                   <img
                     src={image.url}
                     alt={`Image ${index + 1}`}
-                    className="object-contain transition-transform duration-200"
-                    style={{ 
-                      transform: `scale(${zoomLevel})`,
-                      maxWidth: zoomLevel === 1 ? '100%' : 'none',
-                      maxHeight: zoomLevel === 1 ? '100%' : 'none'
-                    }}
+                    className="max-w-full max-h-full object-contain"
                   />
                 </div>
               </CarouselItem>
