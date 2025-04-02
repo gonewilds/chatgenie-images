@@ -55,12 +55,24 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
     setZoomLevel(1);
   }, [currentIndex]);
 
-  const handleZoomIn = () => {
+  const handleZoomIn = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from reaching the carousel
     setZoomLevel((prev) => Math.min(prev + 0.5, 4));
   };
 
-  const handleZoomOut = () => {
+  const handleZoomOut = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from reaching the carousel
     setZoomLevel((prev) => Math.max(prev - 0.5, 0.5));
+  };
+
+  const handlePrevious = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from reaching the carousel
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from reaching the carousel
+    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
   };
 
   if (images.length === 0) return null;
@@ -141,18 +153,17 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          
-          <CarouselPrevious 
-            className="left-2 lg:left-4 opacity-70 hover:opacity-100"
-            aria-label="Previous image"
-          />
-          <CarouselNext 
-            className="right-2 lg:right-4 opacity-70 hover:opacity-100"
-            aria-label="Next image"
-          />
         </Carousel>
         
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+          <Button 
+            size="icon" 
+            variant="secondary" 
+            onClick={handlePrevious}
+            aria-label="Previous image"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <Button 
             size="icon" 
             variant="secondary" 
@@ -168,6 +179,14 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             aria-label="Zoom in"
           >
             <ZoomIn className="h-5 w-5" />
+          </Button>
+          <Button 
+            size="icon" 
+            variant="secondary" 
+            onClick={handleNext}
+            aria-label="Next image"
+          >
+            <ArrowRight className="h-5 w-5" />
           </Button>
         </div>
       </div>
