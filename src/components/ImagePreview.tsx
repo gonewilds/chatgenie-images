@@ -25,9 +25,9 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
       if (e.key === "Escape") {
         onClose();
       } else if (e.key === "ArrowLeft") {
-        setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+        navigateToPrevious();
       } else if (e.key === "ArrowRight") {
-        setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+        navigateToNext();
       }
     };
 
@@ -42,6 +42,15 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
       document.body.style.overflow = '';
     };
   }, []);
+
+  // Navigation functions
+  const navigateToPrevious = () => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  };
+
+  const navigateToNext = () => {
+    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  };
 
   if (images.length === 0) return null;
 
@@ -86,8 +95,8 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
         <div className="flex-1 flex items-center justify-center">
           <Carousel 
             className="w-full h-full"
-            defaultIndex={initialIndex}
-            onPageChange={setCurrentIndex}
+            index={currentIndex}
+            setIndex={setCurrentIndex}
           >
             <CarouselContent className="h-full">
               {images.map((image, index) => (
@@ -111,7 +120,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             variant="outline" 
             size="icon" 
             className="rounded-full opacity-70 hover:opacity-100"
-            onClick={() => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+            onClick={navigateToPrevious}
             aria-label="Previous image"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -120,7 +129,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             variant="outline" 
             size="icon" 
             className="rounded-full opacity-70 hover:opacity-100"
-            onClick={() => setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+            onClick={navigateToNext}
             aria-label="Next image"
           >
             <ArrowRight className="h-5 w-5" />
