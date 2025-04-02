@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { X, ArrowLeft, ArrowRight } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { 
   Carousel,
   CarouselContent,
@@ -17,6 +18,7 @@ interface ImagePreviewProps {
 
 const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -27,6 +29,12 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
         setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
       } else if (e.key === "ArrowRight") {
         setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+      } else if (e.key === "+" || e.key === "=") {
+        // Zoom in with + key
+        setZoomLevel((prev) => Math.min(prev + 0.5, 4));
+      } else if (e.key === "-") {
+        // Zoom out with - key
+        setZoomLevel((prev) => Math.max(prev - 0.5, 0.5));
       }
     };
 
@@ -42,12 +50,25 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
     };
   }, []);
 
+  // Reset zoom level when changing images
+  useEffect(() => {
+    setZoomLevel(1);
+  }, [currentIndex]);
+
+  const handleZoomIn = () => {
+    setZoomLevel((prev) => Math.min(prev + 0.5, 4));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel((prev) => Math.max(prev - 0.5, 0.5));
+  };
+
   if (images.length === 0) return null;
 
   if (images.length === 1) {
     return (
       <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in">
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-background/50 hover:bg-background/80 transition-colors z-10"
@@ -59,8 +80,27 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             <img
               src={images[0].url}
               alt="Full size preview"
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain transition-transform duration-200"
+              style={{ transform: `scale(${zoomLevel})` }}
             />
+          </div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+            <Button 
+              size="icon" 
+              variant="secondary" 
+              onClick={handleZoomOut}
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="h-5 w-5" />
+            </Button>
+            <Button 
+              size="icon" 
+              variant="secondary" 
+              onClick={handleZoomIn}
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </div>
@@ -69,7 +109,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
 
   return (
     <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in">
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full flex flex-col items-center justify-center">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full bg-background/50 hover:bg-background/80 transition-colors z-10"
@@ -94,7 +134,8 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
                   <img
                     src={image.url}
                     alt={`Image ${index + 1}`}
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-full object-contain transition-transform duration-200"
+                    style={{ transform: `scale(${zoomLevel})` }}
                   />
                 </div>
               </CarouselItem>
@@ -110,6 +151,25 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             aria-label="Next image"
           />
         </Carousel>
+        
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+          <Button 
+            size="icon" 
+            variant="secondary" 
+            onClick={handleZoomOut}
+            aria-label="Zoom out"
+          >
+            <ZoomOut className="h-5 w-5" />
+          </Button>
+          <Button 
+            size="icon" 
+            variant="secondary" 
+            onClick={handleZoomIn}
+            aria-label="Zoom in"
+          >
+            <ZoomIn className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
     </div>
   );
