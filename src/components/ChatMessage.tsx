@@ -114,7 +114,6 @@ const ChatMessageComponent = ({
                   alt="Generated Image"
                   className="rounded-md max-w-full cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={openImageModal}
-                  loading="lazy"
                 />
                 <Button
                   variant="outline"
