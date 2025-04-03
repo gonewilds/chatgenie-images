@@ -21,3 +21,10 @@ export interface ChatMessage {
 export interface DBState {
   messages: ChatMessage[];
 }
+
+export interface FavoriteItem {
+  id: string;
+  imageUrl: string;
+  prompt: string;
+  timestamp: number;
+}

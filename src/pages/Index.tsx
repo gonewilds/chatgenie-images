@@ -1,19 +1,26 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { ChatMessage as ChatMessageType } from "@/types";
+import { ChatMessage as ChatMessageType, FavoriteItem } from "@/types";
 import ChatHeader from "@/components/ChatHeader";
 import ChatMessageList from "@/components/ChatMessageList";
 import ChatInput from "@/components/ChatInput";
 import Settings from "@/components/Settings";
+import FavoritesMenu from "@/components/FavoritesMenu";
 import { generateImage } from "@/lib/imageGeneration";
 import { initDB, saveMessages, getMessages, clearMessages } from "@/lib/database";
+import { getFavorites, saveFavorite, removeFavorite, clearFavorites } from "@/lib/favorites";
 import { toast } from "@/hooks/use-toast";
+import { Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   // Initialize the database and load messages
   useEffect(() => {
@@ -33,6 +40,13 @@ const Index = () => {
     };
 
     loadMessages();
+  }, []);
+
+  // Load favorites
+  useEffect(() => {
+    const loadedFavorites = getFavorites();
+    setFavorites(loadedFavorites);
+    setFavoriteIds(loadedFavorites.map(f => f.id));
   }, []);
 
   // Save messages to IndexedDB when they change
@@ -167,11 +181,92 @@ const Index = () => {
     }
   };
 
+  const handleFavoriteImage = (message: ChatMessageType) => {
+    if (!message.imageUrl || !message.prompt) return;
+    
+    // Check if already a favorite
+    const isFavorited = favoriteIds.includes(message.id);
+    
+    if (isFavorited) {
+      // Remove from favorites
+      const updatedFavorites = removeFavorite(message.id);
+      setFavorites(updatedFavorites);
+      setFavoriteIds(updatedFavorites.map(f => f.id));
+      toast({
+        title: "Removed from favorites",
+        description: "Image has been removed from your favorites",
+      });
+    } else {
+      // Add to favorites
+      const newFavorite: FavoriteItem = {
+        id: message.id,
+        imageUrl: message.imageUrl,
+        prompt: message.prompt,
+        timestamp: Date.now()
+      };
+      
+      const updatedFavorites = saveFavorite(newFavorite);
+      setFavorites(updatedFavorites);
+      setFavoriteIds(updatedFavorites.map(f => f.id));
+      
+      toast({
+        title: "Added to favorites",
+        description: "Image has been added to your favorites",
+      });
+    }
+  };
+
+  const handleRemoveFavorite = (id: string) => {
+    const updatedFavorites = removeFavorite(id);
+    setFavorites(updatedFavorites);
+    setFavoriteIds(updatedFavorites.map(f => f.id));
+    
+    toast({
+      title: "Removed from favorites",
+      description: "Image has been removed from your favorites",
+    });
+  };
+
+  const handleClearFavorites = () => {
+    clearFavorites();
+    setFavorites([]);
+    setFavoriteIds([]);
+    
+    toast({
+      title: "Favorites cleared",
+      description: "All favorites have been cleared",
+    });
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
-      <ChatHeader onOpenSettings={() => setIsSettingsOpen(true)} />
+      <ChatHeader 
+        onOpenSettings={() => setIsSettingsOpen(true)} 
+        extraButton={
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsFavoritesOpen(true)}
+            className="relative"
+            title="Favorites"
+          >
+            <Star className={`h-5 w-5 ${favorites.length > 0 ? "fill-amber-500 text-amber-500" : ""}`} />
+            {favorites.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {favorites.length}
+              </span>
+            )}
+            <span className="sr-only">Favorites</span>
+          </Button>
+        }
+      />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <ChatMessageList messages={messages} onRegenerateImage={handleRegenerateImage} />
+        <ChatMessageList 
+          messages={messages} 
+          onRegenerateImage={handleRegenerateImage} 
+          onFavoriteImage={handleFavoriteImage}
+          favoriteIds={favoriteIds}
+        />
         <ChatInput onSendMessage={handleSendMessage} isLoading={isGenerating} />
       </main>
 
@@ -179,6 +274,14 @@ const Index = () => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onClearChat={handleClearChat}
+      />
+      
+      <FavoritesMenu
+        isOpen={isFavoritesOpen}
+        onClose={() => setIsFavoritesOpen(false)}
+        favorites={favorites}
+        onRemoveItem={handleRemoveFavorite}
+        onClearFavorites={handleClearFavorites}
       />
     </div>
   );

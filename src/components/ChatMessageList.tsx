@@ -6,9 +6,16 @@ import ChatMessage from "./ChatMessage";
 interface ChatMessageListProps {
   messages: ChatMessageType[];
   onRegenerateImage: (prompt: string) => void;
+  onFavoriteImage?: (message: ChatMessageType) => void;
+  favoriteIds?: string[];
 }
 
-const ChatMessageList = ({ messages, onRegenerateImage }: ChatMessageListProps) => {
+const ChatMessageList = ({ 
+  messages, 
+  onRegenerateImage,
+  onFavoriteImage,
+  favoriteIds = []
+}: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
@@ -39,7 +46,9 @@ const ChatMessageList = ({ messages, onRegenerateImage }: ChatMessageListProps) 
             key={message.id}
             message={message}
             onRegenerateImage={onRegenerateImage}
+            onFavoriteImage={onFavoriteImage}
             allImages={allImages}
+            favoriteIds={favoriteIds}
           />
         ))
       )}
