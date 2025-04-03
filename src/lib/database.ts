@@ -4,6 +4,7 @@ import { ChatMessage } from "@/types";
 const DB_NAME = "chatgenie-images";
 const DB_VERSION = 1;
 const STORE_NAME = "messages";
+const MAX_IMAGES = 50;
 
 let db: IDBDatabase | null = null;
 
@@ -43,9 +44,29 @@ export const saveMessages = async (messages: ChatMessage[]): Promise<void> => {
   // Clear existing messages
   store.clear();
 
-  // Add all messages
-  for (const message of messages) {
-    store.add(message);
+  // Count images in messages
+  const imageMessages = messages.filter(msg => msg.imageUrl).sort((a, b) => a.timestamp - b.timestamp);
+  
+  // If we have more than MAX_IMAGES with images, remove the oldest ones
+  if (imageMessages.length > MAX_IMAGES) {
+    const messagesToKeep = [...messages];
+    const excessCount = imageMessages.length - MAX_IMAGES;
+    
+    // Collect the IDs of the oldest excess image messages
+    const oldestImageIds = imageMessages.slice(0, excessCount).map(msg => msg.id);
+    
+    // Filter out the oldest image messages
+    const trimmedMessages = messagesToKeep.filter(msg => !oldestImageIds.includes(msg.id));
+    
+    // Add all remaining messages
+    for (const message of trimmedMessages) {
+      store.add(message);
+    }
+  } else {
+    // Add all messages if under the limit
+    for (const message of messages) {
+      store.add(message);
+    }
   }
 
   return new Promise((resolve, reject) => {

@@ -34,6 +34,7 @@ const Favorites = ({ isOpen, onClose }: FavoritesProps) => {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,9 +42,21 @@ const Favorites = ({ isOpen, onClose }: FavoritesProps) => {
     }
   }, [isOpen]);
 
-  const loadFavorites = () => {
-    const loadedFavorites = getFavorites();
-    setFavorites(loadedFavorites.sort((a, b) => b.timestamp - a.timestamp));
+  const loadFavorites = async () => {
+    setIsLoading(true);
+    try {
+      const loadedFavorites = await getFavorites();
+      setFavorites(loadedFavorites);
+    } catch (error) {
+      console.error("Error loading favorites:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load favorites",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCopyPrompt = async (prompt: string) => {
@@ -67,24 +80,34 @@ const Favorites = ({ isOpen, onClose }: FavoritesProps) => {
     setIsConfirmDialogOpen(true);
   };
 
-  const confirmRemoveFavorite = () => {
-    if (itemToDelete === "all") {
-      clearAllFavorites();
-      setFavorites([]);
+  const confirmRemoveFavorite = async () => {
+    try {
+      if (itemToDelete === "all") {
+        await clearAllFavorites();
+        setFavorites([]);
+        toast({
+          title: "All favorites deleted",
+          description: "All favorites have been deleted successfully",
+        });
+      } else if (itemToDelete) {
+        await removeFavorite(itemToDelete);
+        setFavorites(prev => prev.filter(fav => fav.id !== itemToDelete));
+        toast({
+          title: "Favorite removed",
+          description: "Favorite has been removed successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error removing favorites:", error);
       toast({
-        title: "All favorites deleted",
-        description: "All favorites have been deleted successfully",
+        title: "Error",
+        description: "Failed to remove favorites",
+        variant: "destructive",
       });
-    } else if (itemToDelete) {
-      removeFavorite(itemToDelete);
-      setFavorites(prev => prev.filter(fav => fav.id !== itemToDelete));
-      toast({
-        title: "Favorite removed",
-        description: "Favorite has been removed successfully",
-      });
+    } finally {
+      setIsConfirmDialogOpen(false);
+      setItemToDelete(null);
     }
-    setIsConfirmDialogOpen(false);
-    setItemToDelete(null);
   };
 
   const handleClearAllFavorites = () => {
@@ -106,7 +129,11 @@ const Favorites = ({ isOpen, onClose }: FavoritesProps) => {
             </SheetDescription>
           </SheetHeader>
           
-          {favorites.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : favorites.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <Star className="h-12 w-12 text-muted-foreground opacity-20 mb-4" />
               <p className="text-muted-foreground">

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Copy, RefreshCw, Star } from "lucide-react";
@@ -17,9 +17,19 @@ interface ChatMessageProps {
 
 const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMessageProps) => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(() => 
-    message.imageUrl ? isFavorite(message.id) : false
-  );
+  const [isFavorited, setIsFavorited] = useState(false);
+  
+  // Check favorite status on component mount
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (message.imageUrl) {
+        const favorited = await isFavorite(message.id);
+        setIsFavorited(favorited);
+      }
+    };
+    
+    checkFavoriteStatus();
+  }, [message.id, message.imageUrl]);
 
   const copyToClipboard = async () => {
     if (message.sender === "user") {
@@ -51,18 +61,18 @@ const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMes
     }
   };
   
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = async () => {
     if (!message.imageUrl || !message.prompt) return;
     
     if (isFavorited) {
-      removeFavorite(message.id);
+      await removeFavorite(message.id);
       setIsFavorited(false);
       toast({
         title: "Removed from favorites",
         description: "Image has been removed from your favorites",
       });
     } else {
-      saveFavorite({
+      await saveFavorite({
         id: message.id,
         imageUrl: message.imageUrl,
         prompt: message.prompt,
