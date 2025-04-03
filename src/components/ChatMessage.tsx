@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Copy, RefreshCw } from "lucide-react";
+import { Copy, RefreshCw, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import ImagePreview from "./ImagePreview";
+import { saveFavorite, removeFavorite, isFavorite } from "@/lib/favorites";
+import { v4 as uuidv4 } from "uuid";
 
 interface ChatMessageProps {
   message: ChatMessage;
@@ -15,6 +17,9 @@ interface ChatMessageProps {
 
 const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMessageProps) => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(() => 
+    message.imageUrl ? isFavorite(message.id) : false
+  );
 
   const copyToClipboard = async () => {
     if (message.sender === "user") {
@@ -43,6 +48,31 @@ const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMes
   const openImageModal = () => {
     if (message.imageUrl) {
       setIsImageModalOpen(true);
+    }
+  };
+  
+  const handleToggleFavorite = () => {
+    if (!message.imageUrl || !message.prompt) return;
+    
+    if (isFavorited) {
+      removeFavorite(message.id);
+      setIsFavorited(false);
+      toast({
+        title: "Removed from favorites",
+        description: "Image has been removed from your favorites",
+      });
+    } else {
+      saveFavorite({
+        id: message.id,
+        imageUrl: message.imageUrl,
+        prompt: message.prompt,
+        timestamp: Date.now(),
+      });
+      setIsFavorited(true);
+      toast({
+        title: "Added to favorites",
+        description: "Image has been added to your favorites",
+      });
     }
   };
   
@@ -82,12 +112,25 @@ const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMes
             )}
             {message.imageUrl && (
               <div className="flex flex-col items-center space-y-2">
-                <img
-                  src={message.imageUrl}
-                  alt="Generated Image"
-                  className="rounded-md max-w-full cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={openImageModal}
-                />
+                <div className="relative w-full">
+                  <img
+                    src={message.imageUrl}
+                    alt="Generated Image"
+                    className="rounded-md max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={openImageModal}
+                  />
+                  {message.prompt && (
+                    <button
+                      onClick={handleToggleFavorite}
+                      className={`absolute top-2 right-2 p-1.5 rounded-full bg-background/70 hover:bg-background/90 transition-colors ${
+                        isFavorited ? "text-yellow-400" : "text-muted-foreground"
+                      }`}
+                      aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <Star className="h-5 w-5" fill={isFavorited ? "currentColor" : "none"} />
+                    </button>
+                  )}
+                </div>
                 <Button
                   variant="outline"
                   size="sm"

@@ -25,9 +25,9 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
       if (e.key === "Escape") {
         onClose();
       } else if (e.key === "ArrowLeft") {
-        setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+        navigateImages(-1);
       } else if (e.key === "ArrowRight") {
-        setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+        navigateImages(1);
       }
     };
 
@@ -42,6 +42,15 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
       document.body.style.overflow = '';
     };
   }, []);
+
+  const navigateImages = (direction: number) => {
+    setCurrentIndex((prev) => {
+      const newIndex = prev + direction;
+      if (newIndex < 0) return images.length - 1;
+      if (newIndex >= images.length) return 0;
+      return newIndex;
+    });
+  };
 
   if (images.length === 0) return null;
 
@@ -84,25 +93,13 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
         </div>
         
         <div className="flex-1 flex items-center justify-center">
-          <Carousel 
-            className="w-full h-full"
-            defaultIndex={initialIndex}
-            onPageChange={setCurrentIndex}
-          >
-            <CarouselContent className="h-full">
-              {images.map((image, index) => (
-                <CarouselItem key={image.messageId + index} className="h-full flex items-center justify-center">
-                  <div className="w-full h-full flex items-center justify-center p-4 md:p-8">
-                    <img
-                      src={image.url}
-                      alt={`Image ${index + 1}`}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          <div className="w-full h-full flex items-center justify-center">
+            <img
+              src={images[currentIndex].url}
+              alt={`Image ${currentIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
         </div>
         
         {/* Navigation controls at the bottom */}
@@ -111,7 +108,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             variant="outline" 
             size="icon" 
             className="rounded-full opacity-70 hover:opacity-100"
-            onClick={() => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+            onClick={() => navigateImages(-1)}
             aria-label="Previous image"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -120,7 +117,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             variant="outline" 
             size="icon" 
             className="rounded-full opacity-70 hover:opacity-100"
-            onClick={() => setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+            onClick={() => navigateImages(1)}
             aria-label="Next image"
           >
             <ArrowRight className="h-5 w-5" />

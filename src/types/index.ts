@@ -18,6 +18,13 @@ export interface ChatMessage {
   prompt?: string;
 }
 
+export interface FavoriteItem {
+  id: string;
+  imageUrl: string;
+  prompt: string;
+  timestamp: number;
+}
+
 export interface DBState {
   messages: ChatMessage[];
 }
