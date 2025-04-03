@@ -51,6 +51,7 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           onKeyDown={handleKeyDown}
           placeholder="Enter a prompt to generate an image..."
           className="min-h-[60px] max-h-[160px] resize-none flex-1"
+          disabled={isLoading}
         />
         <Button
           type="submit"

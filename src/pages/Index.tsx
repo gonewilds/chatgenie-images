@@ -6,7 +6,6 @@ import ChatHeader from "@/components/ChatHeader";
 import ChatMessageList from "@/components/ChatMessageList";
 import ChatInput from "@/components/ChatInput";
 import Settings from "@/components/Settings";
-import Favorites from "@/components/Favorites";
 import { generateImage } from "@/lib/imageGeneration";
 import { initDB, saveMessages, getMessages, clearMessages } from "@/lib/database";
 import { toast } from "@/hooks/use-toast";
@@ -14,7 +13,6 @@ import { toast } from "@/hooks/use-toast";
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Initialize the database and load messages
@@ -171,10 +169,7 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <ChatHeader 
-        onOpenSettings={() => setIsSettingsOpen(true)} 
-        onOpenFavorites={() => setIsFavoritesOpen(true)}
-      />
+      <ChatHeader onOpenSettings={() => setIsSettingsOpen(true)} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <ChatMessageList messages={messages} onRegenerateImage={handleRegenerateImage} />
         <ChatInput onSendMessage={handleSendMessage} isLoading={isGenerating} />
@@ -184,11 +179,6 @@ const Index = () => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onClearChat={handleClearChat}
-      />
-      
-      <Favorites
-        isOpen={isFavoritesOpen}
-        onClose={() => setIsFavoritesOpen(false)}
       />
     </div>
   );

@@ -2,11 +2,10 @@
 import { useState } from "react";
 import { ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Copy, RefreshCw, Star } from "lucide-react";
+import { Copy, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import ImagePreview from "./ImagePreview";
-import { addFavorite, isFavorite } from "@/lib/favorites";
 
 interface ChatMessageProps {
   message: ChatMessage;
@@ -16,9 +15,6 @@ interface ChatMessageProps {
 
 const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMessageProps) => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [isMessageFavorite, setIsMessageFavorite] = useState(() => 
-    message.imageUrl ? isFavorite(message.imageUrl) : false
-  );
 
   const copyToClipboard = async () => {
     if (message.sender === "user") {
@@ -47,22 +43,6 @@ const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMes
   const openImageModal = () => {
     if (message.imageUrl) {
       setIsImageModalOpen(true);
-    }
-  };
-  
-  const handleAddToFavorites = () => {
-    if (message.imageUrl && message.prompt) {
-      addFavorite({
-        id: message.id,
-        imageUrl: message.imageUrl,
-        prompt: message.prompt,
-        timestamp: message.timestamp
-      });
-      setIsMessageFavorite(true);
-      toast({
-        title: "Added to favorites",
-        description: "Image has been added to your favorites",
-      });
     }
   };
   
@@ -101,16 +81,7 @@ const ChatMessageComponent = ({ message, onRegenerateImage, allImages }: ChatMes
               <p className="whitespace-pre-wrap break-words overflow-hidden">{message.content}</p>
             )}
             {message.imageUrl && (
-              <div className="flex flex-col items-center space-y-2 relative">
-                {!isMessageFavorite && (
-                  <button
-                    onClick={handleAddToFavorites}
-                    className="absolute top-2 right-2 p-1 rounded-full bg-background/70 hover:bg-background/90 transition-colors z-10"
-                    aria-label="Add to favorites"
-                  >
-                    <Star className="h-4 w-4" />
-                  </button>
-                )}
+              <div className="flex flex-col items-center space-y-2">
                 <img
                   src={message.imageUrl}
                   alt="Generated Image"
