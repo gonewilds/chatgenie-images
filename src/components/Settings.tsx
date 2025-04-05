@@ -49,6 +49,8 @@ const samplers = [
   "DPM2 a",
   "DPM++ 2S a",
   "DPM++ 2M",
+  "DPM++ 2M SDE",
+  "DPM++ 3M SDE",
   "DPM++ SDE",
   "DPM fast",
   "DPM adaptive",
