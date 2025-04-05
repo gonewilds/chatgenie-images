@@ -44,6 +44,7 @@ const samplers = [
   "Euler a",
   "Euler",
   "LMS",
+  "LCM",
   "Heun",
   "DPM2",
   "DPM2 a",
