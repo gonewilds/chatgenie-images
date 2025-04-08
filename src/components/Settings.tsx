@@ -65,7 +65,7 @@ const samplers = [
   "PLMS",
 ];
 
-const schedulers = ["Automatic", "Karras", "Exponential", "Polyexponential", "DDIM Uniform"];
+const schedulers = ["Automatic", "Karras", "Exponential", "Polyexponential", "DDIM Uniform", "Simple"];
 
 const SettingsContent = ({ 
   apiEndpoint, 
