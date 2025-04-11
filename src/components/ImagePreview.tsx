@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, TouchEvent } from "react";
 import { X, ArrowLeft, ArrowRight, ZoomIn, ZoomOut } from "lucide-react";
 import { 
   Carousel,
@@ -20,6 +20,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   // Handle keyboard navigation
@@ -93,6 +94,31 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
     setLastClickTime(currentTime);
   };
 
+  // Touch event handlers for swipe navigation
+  const handleTouchStart = (e: TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (touchStart === null) return;
+    
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    
+    // If the swipe distance is significant enough (more than 50px)
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        // Swipe left - go to next image
+        navigateImages(1);
+      } else {
+        // Swipe right - go to previous image
+        navigateImages(-1);
+      }
+    }
+    
+    setTouchStart(null);
+  };
+
   if (images.length === 0) return null;
 
   if (images.length === 1) {
@@ -107,8 +133,28 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             <X className="h-6 w-6" />
           </button>
           
-          {/* Zoom controls */}
-          <div className="absolute top-4 left-4 flex gap-2 z-10">
+          <div 
+            className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto"
+            onClick={zoomLevel > 1 ? resetZoom : undefined}
+            style={{ cursor: zoomLevel > 1 ? 'zoom-out' : 'default' }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img
+              ref={imageRef}
+              src={images[0].url}
+              alt="Full size preview"
+              className="max-w-full max-h-full object-contain transition-transform duration-200"
+              style={{ 
+                transform: `scale(${zoomLevel})`,
+                cursor: zoomLevel > 1 ? 'zoom-out' : 'zoom-in'
+              }}
+              onClick={handleImageClick}
+            />
+          </div>
+          
+          {/* Zoom controls moved to bottom */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
             <Button 
               variant="outline" 
               size="icon" 
@@ -129,28 +175,6 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
             >
               <ZoomIn className="h-5 w-5" />
             </Button>
-            
-            <div className="px-3 py-1 rounded-full bg-background/50 text-sm text-muted-foreground flex items-center ml-2">
-              {Math.round(zoomLevel * 100)}%
-            </div>
-          </div>
-          
-          <div 
-            className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto"
-            onClick={zoomLevel > 1 ? resetZoom : undefined}
-            style={{ cursor: zoomLevel > 1 ? 'zoom-out' : 'default' }}
-          >
-            <img
-              ref={imageRef}
-              src={images[0].url}
-              alt="Full size preview"
-              className="max-w-full max-h-full object-contain transition-transform duration-200"
-              style={{ 
-                transform: `scale(${zoomLevel})`,
-                cursor: zoomLevel > 1 ? 'zoom-out' : 'zoom-in'
-              }}
-              onClick={handleImageClick}
-            />
           </div>
         </div>
       </div>
@@ -172,38 +196,12 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
           {currentIndex + 1} / {images.length}
         </div>
         
-        {/* Zoom controls */}
-        <div className="absolute top-16 left-4 flex gap-2 z-10">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="rounded-full opacity-70 hover:opacity-100"
-            onClick={() => handleZoom(-0.25)}
-            aria-label="Zoom out"
-            disabled={zoomLevel <= 1}
-          >
-            <ZoomOut className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="rounded-full opacity-70 hover:opacity-100"
-            onClick={() => handleZoom(0.25)}
-            aria-label="Zoom in"
-            disabled={zoomLevel >= 3}
-          >
-            <ZoomIn className="h-5 w-5" />
-          </Button>
-          
-          <div className="px-3 py-1 rounded-full bg-background/50 text-sm text-muted-foreground flex items-center ml-2">
-            {Math.round(zoomLevel * 100)}%
-          </div>
-        </div>
-        
         <div 
           className="flex-1 flex items-center justify-center overflow-auto"
           onClick={zoomLevel > 1 ? resetZoom : undefined}
           style={{ cursor: zoomLevel > 1 ? 'zoom-out' : 'default' }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <div className="w-full h-full flex items-center justify-center">
             <img
@@ -220,8 +218,8 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
           </div>
         </div>
         
-        {/* Navigation controls at the bottom */}
-        <div className="flex justify-center items-center gap-3 p-4 w-full">
+        {/* Combined navigation and zoom controls at the bottom */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex justify-center items-center gap-3 z-10">
           <Button 
             variant="outline" 
             size="icon" 
@@ -231,6 +229,29 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full opacity-70 hover:opacity-100"
+            onClick={() => handleZoom(-0.25)}
+            aria-label="Zoom out"
+            disabled={zoomLevel <= 1}
+          >
+            <ZoomOut className="h-5 w-5" />
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full opacity-70 hover:opacity-100"
+            onClick={() => handleZoom(0.25)}
+            aria-label="Zoom in"
+            disabled={zoomLevel >= 3}
+          >
+            <ZoomIn className="h-5 w-5" />
+          </Button>
+          
           <Button 
             variant="outline" 
             size="icon" 
