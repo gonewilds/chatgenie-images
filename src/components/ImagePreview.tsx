@@ -17,7 +17,6 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [pinchDistance, setPinchDistance] = useState<number | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   // Handle keyboard navigation
@@ -99,21 +98,9 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
     setLastClickTime(currentTime);
   };
 
-  // Calculate distance between two touch points for pinch zoom
-  const getDistance = (touch1: Touch, touch2: Touch): number => {
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  };
-
-  // Handle touch events for panning when zoomed in and pinch to zoom
+  // Handle touch events for panning when zoomed in
   const handleTouchStart = (e: TouchEvent) => {
-    if (e.touches.length === 2) {
-      // Pinch gesture detected, store initial distance
-      const distance = getDistance(e.touches[0], e.touches[1]);
-      setPinchDistance(distance);
-      e.preventDefault();
-    } else if (zoomLevel > 1) {
+    if (zoomLevel > 1) {
       // When zoomed in, initiate panning
       setIsDragging(true);
       setDragStart({
@@ -127,31 +114,7 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    // Handle pinch to zoom
-    if (e.touches.length === 2 && pinchDistance !== null) {
-      e.preventDefault();
-      const currentDistance = getDistance(e.touches[0], e.touches[1]);
-      const scaleFactor = currentDistance / pinchDistance;
-      
-      // Only update if the change is significant enough
-      if (Math.abs(scaleFactor - 1) > 0.05) {
-        setZoomLevel(prev => {
-          const newZoom = prev * scaleFactor;
-          // Clamp zoom between 1 and 3
-          const clampedZoom = Math.max(1, Math.min(3, newZoom));
-          
-          // Reset pinch distance for continuous zooming
-          setPinchDistance(currentDistance);
-          
-          // Reset pan position if zooming out completely
-          if (clampedZoom <= 1) {
-            setPanPosition({ x: 0, y: 0 });
-          }
-          
-          return clampedZoom;
-        });
-      }
-    } else if (isDragging && zoomLevel > 1) {
+    if (isDragging && zoomLevel > 1) {
       e.preventDefault(); // Prevent default browser behavior
       const newX = e.touches[0].clientX - dragStart.x;
       const newY = e.touches[0].clientY - dragStart.y;
@@ -172,9 +135,6 @@ const ImagePreview = ({ images, initialIndex, onClose }: ImagePreviewProps) => {
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
-    // Reset pinch state
-    setPinchDistance(null);
-    
     if (zoomLevel > 1) {
       setIsDragging(false);
       return;
