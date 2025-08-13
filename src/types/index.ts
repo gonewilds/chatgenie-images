@@ -9,6 +9,18 @@ export interface GenerationSettings {
   negative_prompt: string;
 }
 
+export interface ComfyUISettings {
+  endpoint: string;
+  workflow: object | null;
+  steps: number;
+  cfg_scale: number;
+  width: number;
+  height: number;
+  sampler_name: string;
+  scheduler: string;
+  negative_prompt: string;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;
